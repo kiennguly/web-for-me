@@ -1,0 +1,4 @@
+// Tạo một số hiệu ứng đơn giản nếu cần thiết
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Trang web đã được tải thành công.");
+});
