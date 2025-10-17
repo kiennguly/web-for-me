@@ -1,24 +1,329 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thông Tin Cá Nhân</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>👥 Demo Webservice Firebase Realtime (Users)</title>
+  <style>
+    /* ------------------------------------- */
+    /* CSS chung (Giữ nguyên) */
+    /* ------------------------------------- */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      color: #333;
+      padding: 20px;
+      max-width: 650px;
+      margin: 0 auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    h2, h3 {
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+      margin-top: 25px;
+    }
+
+    /* ------------------------------------- */
+    /* CSS cho danh sách users (Điều chỉnh màu sắc cho phù hợp với dữ liệu User) */
+    /* ------------------------------------- */
+    #list {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 15px;
+    }
+
+    #list li {
+      background-color: #ecf0f1;
+      border: 1px solid #bdc3c7;
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); 
+      transition: all 0.3s ease, background-color 0.5s; 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden; 
+      position: relative; 
+    }
+    
+    #list li:hover {
+        background-color: #dbe4e8;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    }
+    
+    .product-info { /* Đổi tên class này thành user-info nếu cần, nhưng giữ nguyên để đơn giản */
+        flex-grow: 1;
+    }
+    
+    .product-info b {
+        color: #3498db; /* Đổi màu cho ID người dùng */
+    }
+    
+    .delete-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        margin-left: 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+    
+    .delete-btn:hover {
+        background-color: #c0392b;
+    }
+
+    /* HIỆU ỨNG THÊM (Giữ nguyên) */
+    .new-item-flash {
+        background-color: #2ecc71 !important; 
+        color: white;
+        transform: scale(1.01);
+        animation: pulseFlash 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; 
+    }
+
+    @keyframes pulseFlash {
+        0% { background-color: #2ecc71; color: white; transform: scale(1.01); box-shadow: 0 0 15px rgba(46, 204, 113, 0.8); } 
+        50% { background-color: #27ae60; color: white; transform: scale(1.02); }
+        100% { 
+            background-color: #ecf0f1; 
+            color: #333; 
+            transform: scale(1); 
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); 
+        } 
+    }
+    
+    /* HIỆU ỨNG XÓA (Giữ nguyên) */
+    .deleting-item {
+        animation: explodeDissolve 0.6s ease-in forwards; 
+        pointer-events: none; 
+    }
+
+    @keyframes explodeDissolve {
+        0% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            height: 40px; 
+            padding: 10px 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05) translateY(-5px) rotate(1deg); 
+            filter: brightness(1.2); 
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0.5) translateY(50px);
+            height: 0; 
+            padding: 0 15px; 
+            margin-bottom: 0; 
+            border-width: 0;
+            filter: blur(5px); 
+            box-shadow: none;
+        }
+    }
+    /* ------------------------------------- */
+    /* CSS cho form (Giữ nguyên) */
+    /* ------------------------------------- */
+    label {
+      display: inline-block;
+      width: 80px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    input[type="text"], input[type="number"], input:not([type]) {
+      width: calc(100% - 90px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    button#btnAdd {
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease, transform 0.1s;
+      margin-top: 10px;
+    }
+
+    button#btnAdd:hover {
+      background-color: #2980b9;
+    }
+    
+    .sending {
+        background-color: #f1c40f !important;
+        transform: scale(0.98);
+        transition: transform 0.1s, background-color 0.1s;
+    }
+    
+    .form-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .form-group label {
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+    
+    .form-group input {
+        flex-grow: 1;
+        margin-bottom: 0;
+    }
+    
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Thông Tin Cá Nhân</h1>
-        <div class="profile">
-            <img src="profile.jpg" alt="Hình ảnh cá nhân" class="profile-img">
-            <div class="details">
-                <h2>Họ và Tên: John Doe</h2>
-                <p><strong>Ngày sinh:</strong> 01/01/1990</p>
-                <p><strong>Email:</strong> johndoe@example.com</p>
-                <p><strong>Giới thiệu:</strong> Tôi là một lập trình viên đam mê công nghệ và luôn muốn học hỏi để phát triển bản thân.</p>
-            </div>
-        </div>
-    </div>
-    <script src="script.js"></script>
+  <h2>👥 Danh sách Người dùng (Realtime từ Firebase)</h2> 
+  <ul id="list">Đang tải...</ul>
+
+  <hr>
+
+  <h3>➕ Thêm Người dùng</h3>
+  <div class="form-group">
+    <label>ID User: </label><input id="id" type="text" placeholder="Ví dụ: u006">
+  </div>
+  <div class="form-group">
+    <label>Tên: </label><input id="name" type="text" placeholder="Ví dụ: Alice Nguyen">
+  </div>
+  <div class="form-group">
+    <label>Email: </label><input id="email" type="text" placeholder="Ví dụ: alice@example.com"> 
+  </div>
+  <button id="btnAdd">Thêm Người dùng</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    // Cấu hình Firebase (Giữ nguyên)
+    const firebaseConfig = {
+      databaseURL: "https://kien24-e5c73-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    // THAY ĐỔI 6: Đổi tham chiếu gốc từ "items" sang "users"
+    const usersRef = ref(db, "users"); 
+    let lastAddedId = null; 
+
+    // Hàm xóa người dùng (Cập nhật tham chiếu)
+    const prepareToDelete = (buttonElement, id) => {
+        const liElement = buttonElement.closest('li');
+        liElement.classList.add('deleting-item');
+        
+        setTimeout(async () => {
+            // THAY ĐỔI 7: Xóa trên nhánh "users"
+            const userToDeleteRef = ref(db, "users/" + id); 
+            await remove(userToDeleteRef);
+        }, 600); 
+    };
+    window.prepareToDelete = prepareToDelete;
+
+
+    // Hiển thị danh sách realtime 
+    const list = document.getElementById("list");
+
+    // THAY ĐỔI 8: Lắng nghe trên nhánh "users"
+    onValue(usersRef, (snapshot) => { 
+      const data = snapshot.val();
+      list.innerHTML = "";
+
+      if (data) {
+        const fragment = document.createDocumentFragment();
+
+        Object.entries(data).forEach(([id, user]) => {
+            // THAY ĐỔI 9: Lấy thông tin name và email (thay vì name và price)
+            const name = user.name || 'Không tên'; 
+            const email = user.email || 'Không email';
+            
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="product-info">
+                    <b>${id}</b> &mdash; ${name} <span style="font-style: italic; color: #5e6b7b;">(${email})</span>
+                </div>
+                <button class="delete-btn" onclick="window.prepareToDelete(this, '${id}')">Xóa</button>
+            `;
+            
+            if (id === lastAddedId) {
+                li.classList.add('new-item-flash');
+                setTimeout(() => {
+                    li.classList.remove('new-item-flash');
+                    lastAddedId = null; 
+                }, 1500); 
+            }
+            
+            fragment.appendChild(li);
+        });
+        list.appendChild(fragment); 
+      } else {
+        // THAY ĐỔI 10: Cập nhật thông báo
+        list.innerHTML = "<li>Chưa có người dùng nào</li>"; 
+      }
+    });
+
+    // ==========================
+    // Thêm người dùng mới
+    // ==========================
+    const btnAdd = document.getElementById("btnAdd");
+    
+    btnAdd.addEventListener("click", async () => {
+      const idInput = document.getElementById("id");
+      const nameInput = document.getElementById("name");
+      // THAY ĐỔI 11: Lấy giá trị input email
+      const emailInput = document.getElementById("email"); 
+      
+      const id = idInput.value.trim();
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim(); 
+
+      // THAY ĐỔI 12: Kiểm tra validation (chỉ cần id, name, email không rỗng)
+      if (!id || !name || !email) { 
+        alert("Vui lòng nhập đầy đủ ID, Tên và Email!");
+        return;
+      }
+      
+      btnAdd.classList.add('sending');
+      btnAdd.textContent = "Đang gửi...";
+      lastAddedId = id; 
+
+      try {
+        // THAY ĐỔI 13: Tham chiếu đến users/ID_user
+        const userRef = ref(db, "users/" + id); 
+        // THAY ĐỔI 14: Set dữ liệu với name và email
+        await set(userRef, { name, email }); 
+        
+        btnAdd.classList.remove('sending');
+        btnAdd.textContent = "Thêm Người dùng"; // THAY ĐỔI 15: Cập nhật text
+
+        idInput.value = "";
+        nameInput.value = "";
+        emailInput.value = ""; // THAY ĐỔI 16: Reset input email
+
+      } catch (error) {
+        console.error("Lỗi khi thêm người dùng:", error);
+        alert("Lỗi khi gửi dữ liệu lên Firebase!");
+        
+        btnAdd.classList.remove('sending');
+        btnAdd.textContent = "Thêm Người dùng"; // THAY ĐỔI 17: Cập nhật text
+      }
+    });
+  </script>
 </body>
 </html>
